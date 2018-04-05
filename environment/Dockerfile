@@ -9,6 +9,7 @@ RUN \
     PATH=/opt/miniconda3/bin:$PATH conda config --set changeps1 no && \
     PATH=/opt/miniconda3/bin:$PATH conda config --set show_channel_urls True && \
     PATH=/opt/miniconda3/bin:$PATH conda config --add channels conda-forge && \
+    PATH=/opt/miniconda3/bin:$PATH conda update -n base conda && \
     PATH=/opt/miniconda3/bin:$PATH conda install --quiet \
         conda-build python=3.6 gmp numpy scipy matplotlib cython cmake gsl numba \
         pytest ipywidgets mpmath xz tk mpfr openssl sympy pip sqlite && \
