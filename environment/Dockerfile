@@ -11,9 +11,5 @@ RUN \
     PATH=/opt/miniconda3/bin:$PATH conda config --add channels conda-forge && \
     PATH=/opt/miniconda3/bin:$PATH conda update -n base conda && \
     PATH=/opt/miniconda3/bin:$PATH conda install --quiet \
-        conda-build python=3.6 gmp numpy scipy matplotlib cython cmake gsl numba \
-        pytest ipywidgets mpmath xz tk mpfr openssl sympy pip sqlite && \
-    PATH=/opt/miniconda3/bin:$PATH conda clean -t && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
-# apt-get update -q && apt-get -q -y install ssh gdb time && apt-get -q -y build-dep sundials && apt-get clean && \
+        conda-build python=3.6 gmp numpy scipy matplotlib cython cmake gsl numba appdirs \
+        pytest ipywidgets mpmath xz tk mpfr openssl sympy pip sqlite sundials boost suitesparse
