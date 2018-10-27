@@ -13,3 +13,9 @@ RUN \
     PATH=/opt/miniconda3/bin:$PATH conda install --quiet \
         conda-build python=3.6 gmp numpy scipy matplotlib cython cmake gsl numba appdirs \
         pytest ipywidgets mpmath xz tk mpfr openssl sympy pip sqlite sundials boost suitesparse
+RUN \
+    cd /tmp && \
+    curl -LOs "https://bitbucket.org/squeaky/portable-pypy/downloads/pypy3.5-6.0.0-linux_x86_64-portable.tar.bz2" && \
+    tar xjf pypy3.5*.tar.bz2 -C /opt && rm pypy3.5*.tar.bz2 && \
+    /opt/pypy3.5-*/bin/pypy3.5 -m ensurepip && \
+    /opt/pypy3.5-*/bin/pypy3.5 -m pip install numpy pytest sympy
