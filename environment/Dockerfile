@@ -1,4 +1,4 @@
-FROM bjodah/bjodahimg18:v1.3
+FROM bjodah/bjodahimg18:v1.5
 MAINTAINER Björn Dahlgren <bjodah@DELETEMEgmail.com>
 RUN \
     cd /tmp && \
