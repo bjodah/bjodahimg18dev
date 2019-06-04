@@ -1,4 +1,4 @@
-FROM bjodah/bjodahimg18:v2.1
+FROM bjodah/bjodahimg18:v2.2
 MAINTAINER Björn Dahlgren <bjodah@DELETEMEgmail.com>
 RUN \
     cd /tmp && \
@@ -30,7 +30,7 @@ RUN \
       Pkg.add("DifferentialEquations"); using DifferentialEquations; \
       pkg"add https://github.com/JuliaDiffEq/DiffEqTutorials.jl"; using DiffEqTutorials; \
       Pkg.add("IJulia"); using IJulia; \
-      Pkg.add("PyPlot"); using PyPlot; \
+      Pkg.add("PyPlot"); using PyPlot; ' && \
       Pkg.add("Latexify"); using Latexify; \
       Pkg.add("DiffEqBiological"); using DiffEqBiological; \
       Pkg.add("ODEInterfaceDiffEq"); using ODEInterfaceDiffEq;' && \
@@ -44,6 +44,13 @@ RUN \
       DiffEqTutorials.weave_folder("ode_extras"); \
       DiffEqTutorials.weave_folder("type_handling"); \
       '
+
+    # ~/.julia/conda/3/bin/pip install jupyter_contrib_nbextensions && \
+    # PATH=/opt/julia-1.1.1/bin:$PATH julia -e 'using Pkg; \
+    #   Pkg.add("WebIO"); using WebIO; \
+    #   Pkg.add("ORCA"); using ORCA; \
+    #   Pkg.add("PloylyJS"); using PlotlyJS; \
+
 
 RUN \
     cd /tmp && \
