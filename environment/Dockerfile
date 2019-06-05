@@ -30,7 +30,7 @@ RUN \
       Pkg.add("DifferentialEquations"); using DifferentialEquations; \
       pkg"add https://github.com/JuliaDiffEq/DiffEqTutorials.jl"; using DiffEqTutorials; \
       Pkg.add("IJulia"); using IJulia; \
-      Pkg.add("PyPlot"); using PyPlot; ' && \
+      Pkg.add("PyPlot"); using PyPlot; \
       Pkg.add("Latexify"); using Latexify; \
       Pkg.add("DiffEqBiological"); using DiffEqBiological; \
       Pkg.add("ODEInterfaceDiffEq"); using ODEInterfaceDiffEq;' && \
