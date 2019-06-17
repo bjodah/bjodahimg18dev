@@ -1,7 +1,10 @@
-FROM bjodah/bjodahimg18:v2.2
+FROM bjodah/bjodahimg18:v2.3
 MAINTAINER Björn Dahlgren <bjodah@DELETEMEgmail.com>
-RUN \
-    cd /tmp && \
+COPY scripts/get_*.sh /opt/
+RUN export CPLUS_INCLUDE_PATH=/opt/boost_1_70_0/include && cd /tmp && \
+    curl -Ls "https://vorboss.dl.sourceforge.net/project/swig/swig/swig-4.0.0/swig-4.0.0.tar.gz" | tar xz && cd swig-* && ./configure && make && make install && \
+    CC=gcc-8   CXX=g++-8 CXXFLAGS="-D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -fsized-deallocation" /opt/get_symengine.sh ab7c16a5df4ee8688d0a990d0f09f5cb510e69f2 /opt/symengine-ab7c16a-dbg Debug   -DWITH_BFD=ON  -DINTEGER_CLASS=boostmp && \
+    CC=clang-8 CXX=clang++-8                                                                        /opt/get_symengine.sh ab7c16a5df4ee8688d0a990d0f09f5cb510e69f2 /opt/symengine-ab7c16a-rel Release -DWITH_BFD=OFF -DWITH_TCMALLOC=ON && \
     curl -LOs "https://repo.continuum.io/miniconda/Miniconda3-4.6.14-Linux-x86_64.sh" && \
     /bin/bash Miniconda3-4.6.14-Linux-x86_64.sh -b -p /opt/miniconda3 && \
     rm Miniconda3*.sh && \
