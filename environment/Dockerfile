@@ -69,3 +69,8 @@ RUN \
 #     PATH=/opt/julia-1.1.1/bin:$PATH python3 -c 'import diffeqpy; diffeqpy.install()' && \
 #     PATH=/opt/julia-1.1.1/bin:$PATH python3 -m pytest --pyargs diffeqpy && \
 #     rm -rf /tmp/* /var/tmp/* ~/.cache/pip
+
+RUN \
+    apt-get update && \
+    apt-get --quiet --assume-yes --no-install-recommends install inkscape && \
+    apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
