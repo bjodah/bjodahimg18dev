@@ -72,5 +72,10 @@ RUN \
 
 RUN \
     apt-get update && \
-    apt-get --quiet --assume-yes --no-install-recommends install inkscape ninja-build && \
+    apt-get --quiet --assume-yes --no-install-recommends install inkscape && \
+    apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+RUN \
+    apt-get update && \
+    apt-get --quiet --assume-yes --no-install-recommends install ninja-build && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
