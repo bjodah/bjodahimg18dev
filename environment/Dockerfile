@@ -1,4 +1,4 @@
-FROM bjodah/bjodahimg18:v2.4
+FROM bjodah/bjodahimg18:v2.5
 MAINTAINER Björn Dahlgren <bjodah@DELETEMEgmail.com>
 COPY scripts/get_*.sh /opt/
 RUN export CPLUS_INCLUDE_PATH=/opt/boost_1_70_0/include && cd /tmp && \
