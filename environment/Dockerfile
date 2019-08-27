@@ -1,6 +1,19 @@
-FROM bjodah/bjodahimg18:v2.5
+FROM bjodah/bjodahimg18:v3.0
 MAINTAINER Björn Dahlgren <bjodah@DELETEMEgmail.com>
-COPY scripts/get_*.sh /opt/
+
+RUN \
+    export CC=clang-8 CXX=clang++-8 && \
+    export LLVM_ORG_VER=8.0.1 && \
+    curl -Ls https://github.com/llvm/llvm-project/archive/llvmorg-${LLVM_ORG_VER}.tar.gz | tar xz -C /tmp && \
+    mkdir /tmp/build_libcxx && cd /tmp/build_libcxx && cmake -DCMAKE_BUILD_TYPE=Release -DLLVM_USE_SANITIZER=MemoryWithOrigins \
+      -DLLVM_CONFIG_PATH=/usr/bin/llvm-config-8 \
+      -DCMAKE_INSTALL_PREFIX=/opt/libcxx8_msan /tmp/llvm-project-llvmorg-${LLVM_ORG_VER}/libcxx && make install && cd - && \
+    mkdir /tmp/build_libcxxabi && cd /tmp/build_libcxxabi && cmake -DCMAKE_BUILD_TYPE=Release -DLLVM_USE_SANITIZER=MemoryWithOrigins \
+      -DLIBCXXABI_LIBCXX_INCLUDES=/opt/libcxx8_msan/include/c++/v1 -DLLVM_CONFIG_PATH=/usr/bin/llvm-config-8 -DLIBCXXABI_LIBCXX_PATH=/tmp/llvm-project-llvmorg-${LLVM_ORG_VER}/libcxx \
+      -DCMAKE_INSTALL_PREFIX=/opt/libcxx8_msan /tmp/llvm-project-llvmorg-${LLVM_ORG_VER}/libcxxabi && make install && cd - && \
+    rm -r /tmp/build_* /tmp/llvm-project*
+
+COPY scripts/get_symengine.sh /opt/
 RUN export CPLUS_INCLUDE_PATH=/opt/boost_1_70_0/include && cd /tmp && \
     curl -Ls "https://vorboss.dl.sourceforge.net/project/swig/swig/swig-4.0.0/swig-4.0.0.tar.gz" | tar xz && cd swig-* && ./configure && make && make install && \
     CC=gcc-8   CXX=g++-8 CXXFLAGS="-D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -fsized-deallocation" /opt/get_symengine.sh ab7c16a5df4ee8688d0a990d0f09f5cb510e69f2 /opt/symengine-ab7c16a-dbg Debug   -DWITH_BFD=ON  -DINTEGER_CLASS=boostmp && \
@@ -28,8 +41,8 @@ RUN export CPLUS_INCLUDE_PATH=/opt/boost_1_70_0/include && cd /tmp && \
 #    rm -r /tmp/*
 
 RUN \
-    curl -Ls "https://julialang-s3.julialang.org/bin/linux/x64/1.1/julia-1.1.1-linux-x86_64.tar.gz" | tar xz -C /opt && \
-    PATH=/opt/julia-1.1.1/bin:$PATH julia -e 'using Pkg; \
+    curl -Ls "https://julialang-s3.julialang.org/bin/linux/x64/1.2/julia-1.2.0-linux-x86_64.tar.gz" | tar xz -C /opt && \
+    PATH=/opt/julia-1.2.0/bin:$PATH julia -e 'using Pkg; \
       Pkg.add("DifferentialEquations"); using DifferentialEquations; \
       pkg"add https://github.com/JuliaDiffEq/DiffEqTutorials.jl"; using DiffEqTutorials; \
       Pkg.add("IJulia"); using IJulia; \
@@ -38,7 +51,7 @@ RUN \
       Pkg.add("DiffEqBiological"); using DiffEqBiological; \
       Pkg.add("ODEInterfaceDiffEq"); using ODEInterfaceDiffEq;' && \
     cd /opt && git clone https://github.com/JuliaDiffEq/DiffEqTutorials.jl && \
-    PATH=/opt/julia-1.1.1/bin:$PATH julia -e 'using Pkg, DiffEqTutorials; \
+    PATH=/opt/julia-1.2.0/bin:$PATH julia -e 'using Pkg, DiffEqTutorials; \
       cd(joinpath(dirname(pathof(DiffEqTutorials)), "..")); \
       Pkg.pkg"activate ."; \
       Pkg.pkg"instantiate"; \
@@ -49,7 +62,7 @@ RUN \
       '
 
     # ~/.julia/conda/3/bin/pip install jupyter_contrib_nbextensions && \
-    # PATH=/opt/julia-1.1.1/bin:$PATH julia -e 'using Pkg; \
+    # PATH=/opt/julia-1.2.0/bin:$PATH julia -e 'using Pkg; \
     #   Pkg.add("WebIO"); using WebIO; \
     #   Pkg.add("ORCA"); using ORCA; \
     #   Pkg.add("PloylyJS"); using PlotlyJS; \
@@ -65,12 +78,19 @@ RUN \
     rm -rf /tmp/* /var/tmp/* ~/.cache/pip
 
 # RUN \
-#     PATH=/opt/julia-1.1.1/bin:$PATH python3 -m pip install diffeqpy numba && \
-#     PATH=/opt/julia-1.1.1/bin:$PATH python3 -c 'import diffeqpy; diffeqpy.install()' && \
-#     PATH=/opt/julia-1.1.1/bin:$PATH python3 -m pytest --pyargs diffeqpy && \
+#     PATH=/opt/julia-1.2.0/bin:$PATH python3 -m pip install diffeqpy numba && \
+#     PATH=/opt/julia-1.2.0/bin:$PATH python3 -c 'import diffeqpy; diffeqpy.install()' && \
+#     PATH=/opt/julia-1.2.0/bin:$PATH python3 -m pytest --pyargs diffeqpy && \
 #     rm -rf /tmp/* /var/tmp/* ~/.cache/pip
 
+# RUN \
+#     apt-get update && \
+#     apt-get --quiet --assume-yes --no-install-recommends install inkscape ninja-build && \
+#     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+
+COPY scripts/get_sundials.sh /opt/
 RUN \
-    apt-get update && \
-    apt-get --quiet --assume-yes --no-install-recommends install inkscape ninja-build && \
-    apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+    CC=gcc-8 /opt/get_sundials.sh 5.0.0-dev.1 /opt/sundials-5.0.0-dev.1-klu-lapack -DLAPACK_ENABLE=ON -DKLU_ENABLE=ON -DKLU_INCLUDE_DIR=/usr/include/suitesparse -DKLU_LIBRARY_DIR=/usr/lib/x86_64-linux-gnu -DSUNDIALS_INDEX_SIZE=32 && \
+    CC=clang-8 CFLAGS="-fsanitize=memory -fno-omit-frame-pointer -fno-optimize-sibling-calls -O1" /opt/get_sundials.sh 5.0.0-dev.1 /opt/sundials-5.0.0-dev.1-msan -DLAPACK_ENABLE=OFF -DKLU_ENABLE=OFF -DSUNDIALS_INDEX_SIZE=32 && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
