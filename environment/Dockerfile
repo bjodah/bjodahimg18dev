@@ -94,3 +94,9 @@ RUN \
     CC=gcc-8 /opt/get_sundials.sh 5.0.0-dev.1 /opt/sundials-5.0.0-dev.1-klu-lapack -DLAPACK_ENABLE=ON -DKLU_ENABLE=ON -DKLU_INCLUDE_DIR=/usr/include/suitesparse -DKLU_LIBRARY_DIR=/usr/lib/x86_64-linux-gnu -DSUNDIALS_INDEX_SIZE=32 && \
     CC=clang-8 CFLAGS="-fsanitize=memory -fno-omit-frame-pointer -fno-optimize-sibling-calls -O1" /opt/get_sundials.sh 5.0.0-dev.1 /opt/sundials-5.0.0-dev.1-msan -DLAPACK_ENABLE=OFF -DKLU_ENABLE=OFF -DSUNDIALS_INDEX_SIZE=32 && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+RUN \
+    cd /tmp && \
+    curl -LOs https://github.com/jgm/pandoc/releases/download/2.7.3/pandoc-2.7.3-1-amd64.deb && \
+    dpkg -i pandoc-2.7.3-1-amd64.deb && \
+    rm pandoc-2.7.3-1-amd64.deb
