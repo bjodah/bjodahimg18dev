@@ -54,6 +54,10 @@ RUN \
     CC=clang-8 CFLAGS="-fsanitize=memory -fno-omit-frame-pointer -fno-optimize-sibling-calls -O1" /opt/get_sundials.sh 5.1.0 /opt/sundials-5.1.0-msan -DLAPACK_ENABLE=OFF -DKLU_ENABLE=OFF -DSUNDIALS_INDEX_SIZE=32 && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
+RUN \
+    apt-get update && \
+    apt-get --quiet --assume-yes --no-install-recommends install libtool-bin && \
+    apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # RUN \
 #     curl -Ls "https://julialang-s3.julialang.org/bin/linux/x64/1.2/julia-1.2.0-linux-x86_64.tar.gz" | tar xz -C /opt && \
