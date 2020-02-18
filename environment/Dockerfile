@@ -56,8 +56,17 @@ RUN \
 
 RUN \
     apt-get update && \
-    apt-get --quiet --assume-yes --no-install-recommends install libtool-bin && \
+    apt-get --quiet --assume-yes --no-install-recommends install libtool-bin uuid-dev libgdbm-dev tk-dev && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+RUN \
+    curl -Ls https://github.com/python/cpython/archive/v3.8.2rc2.tar.gz | tar xz && \
+    cd cpython-3.8.2rc2 && \
+    CC=gcc-8 CFLAGS="-O2 -march=native" ./configure --prefix=/opt/cpython-3.8 --enable-loadable-sqlite-extensions --enable-shared --with-ensurepip=yes LDFLAGS=-Wl,-rpath=/opt/cpython-3.8/lib && \
+    make -j 4 && \
+    LD_LIBRARY_PATH=. ./python -c "import sqlite3, uuid, lzma, bz2" && make install && \
+    cd .. && rm -r cpython-3.8.2rc2 && /opt/cpython-3.8/bin/python3 -m pip install --upgrade --upgrade-strategy=eager pip && \
+    /opt/cpython-3.8/bin/python3 -m pip install setuptools wheel appdirs pybind11 numpy cython scipy matplotlib pycparser pytest-pep8 pytest-cov pytest-flakes pytest-flake8 pytest-xdist pytest-docstyle
 
 # RUN \
 #     curl -Ls "https://julialang-s3.julialang.org/bin/linux/x64/1.2/julia-1.2.0-linux-x86_64.tar.gz" | tar xz -C /opt && \
