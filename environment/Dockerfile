@@ -42,7 +42,7 @@ COPY scripts/get_symengine.sh /opt/
 RUN export CPLUS_INCLUDE_PATH=/opt/boost_1_71_0/include && cd /tmp && \
     curl -Ls "https://vorboss.dl.sourceforge.net/project/swig/swig/swig-4.0.1/swig-4.0.1.tar.gz" | tar xz && cd swig-* && ./configure && make && make install && \
     CC=gcc-8   CXX=g++-8 CXXFLAGS="-D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -fsized-deallocation" /opt/get_symengine.sh d0369286fb0143e16887c9876d45b2f06f89a294 /opt/symengine-d036928-dbg Debug   -DWITH_BFD=ON  -DINTEGER_CLASS=boostmp && \
-    CC=clang-8 CXX=clang++-8                                                                        /opt/get_symengine.sh d0369286fb0143e16887c9876d45b2f06f89a294 /opt/symengine-d036928-rel Release -DWITH_BFD=OFF
+    CC=clang-8 CXX=clang++-8                                                                        /opt/get_symengine.sh d0369286fb0143e16887c9876d45b2f06f89a294 /opt/symengine-d036928-rel Release -DWITH_BFD=OFF && \
     CC=clang-8 CXX=clang++-8                                                                        /opt/get_symengine.sh d0369286fb0143e16887c9876d45b2f06f89a294 /opt/symengine-d036928-tcm Release -DWITH_BFD=OFF -DWITH_TCMALLOC=ON
 
 RUN \
