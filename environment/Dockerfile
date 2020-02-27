@@ -13,12 +13,6 @@ RUN \
       -DCMAKE_INSTALL_PREFIX=/opt/libcxx8_msan /tmp/llvm-project-llvmorg-${LLVM_ORG_VER}/libcxxabi && make install && cd - && \
     rm -r /tmp/build_* /tmp/llvm-project*
 
-COPY scripts/get_symengine.sh /opt/
-RUN export CPLUS_INCLUDE_PATH=/opt/boost_1_71_0/include && cd /tmp && \
-    curl -Ls "https://vorboss.dl.sourceforge.net/project/swig/swig/swig-4.0.1/swig-4.0.1.tar.gz" | tar xz && cd swig-* && ./configure && make && make install && \
-    CC=gcc-8   CXX=g++-8 CXXFLAGS="-D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -fsized-deallocation" /opt/get_symengine.sh d0369286fb0143e16887c9876d45b2f06f89a294 /opt/symengine-d036928-dbg Debug   -DWITH_BFD=ON  -DINTEGER_CLASS=boostmp && \
-    CC=clang-8 CXX=clang++-8                                                                        /opt/get_symengine.sh d0369286fb0143e16887c9876d45b2f06f89a294 /opt/symengine-d036928-rel Release -DWITH_BFD=OFF -DWITH_TCMALLOC=ON
-
 RUN \
     cd /tmp && \
     curl -LOs "https://bitbucket.org/pypy/pypy/downloads/pypy3.6-v7.3.0-linux64.tar.bz2" && \
@@ -27,6 +21,39 @@ RUN \
     /opt/pypy3.6-*/bin/pypy3 -m pip install --upgrade --upgrade-strategy=eager pip && \
     /opt/pypy3.6-*/bin/pypy3 -m pip install numpy pytest sympy && \
     rm -rf /tmp/* /var/tmp/* ~/.cache/pip
+
+RUN \
+    apt-get update && \
+    apt-get --quiet --assume-yes --no-install-recommends install libtool-bin uuid-dev libgdbm-dev tk-dev && \
+    cd /tmp && \
+    curl -LOs https://github.com/jgm/pandoc/releases/download/2.9.2/pandoc-2.9.2-1-amd64.deb && \
+    dpkg -i pandoc-2.9.2-1-amd64.deb && \
+    apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+COPY scripts/get_sundials.sh /opt/
+RUN \
+    CC=gcc-8 /opt/get_sundials.sh 5.1.0 /opt/sundials-5.1.0-klu-lapack -DLAPACK_ENABLE=ON -DKLU_ENABLE=ON -DKLU_INCLUDE_DIR=/usr/include/suitesparse -DKLU_LIBRARY_DIR=/usr/lib/x86_64-linux-gnu -DSUNDIALS_INDEX_SIZE=32 && \
+    CC=gcc-8 /opt/get_sundials.sh 5.1.0 /opt/sundials-5.1.0-noklu-nolapack-extended-int64 -DLAPACK_ENABLE=OFF -DKLU_ENABLE=OFF -DSUNDIALS_PRECISION:STRING="extended" -DSUNDIALS_INDEX_SIZE=64 && \
+    CC=gcc-8 /opt/get_sundials.sh 5.1.0 /opt/sundials-5.1.0-noklu-nolapack-single-int32 -DLAPACK_ENABLE=OFF -DKLU_ENABLE=OFF -DSUNDIALS_PRECISION:STRING="single" -DSUNDIALS_INDEX_SIZE=32 && \
+    CC=clang-8 CFLAGS="-fsanitize=memory -fno-omit-frame-pointer -fno-optimize-sibling-calls -O1" /opt/get_sundials.sh 5.1.0 /opt/sundials-5.1.0-msan -DLAPACK_ENABLE=OFF -DKLU_ENABLE=OFF -DSUNDIALS_INDEX_SIZE=32 && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+COPY scripts/get_symengine.sh /opt/
+RUN export CPLUS_INCLUDE_PATH=/opt/boost_1_71_0/include && cd /tmp && \
+    curl -Ls "https://vorboss.dl.sourceforge.net/project/swig/swig/swig-4.0.1/swig-4.0.1.tar.gz" | tar xz && cd swig-* && ./configure && make && make install && \
+    CC=gcc-8   CXX=g++-8 CXXFLAGS="-D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -fsized-deallocation" /opt/get_symengine.sh d0369286fb0143e16887c9876d45b2f06f89a294 /opt/symengine-d036928-dbg Debug   -DWITH_BFD=ON  -DINTEGER_CLASS=boostmp && \
+    CC=clang-8 CXX=clang++-8                                                                        /opt/get_symengine.sh d0369286fb0143e16887c9876d45b2f06f89a294 /opt/symengine-d036928-rel Release -DWITH_BFD=OFF
+    CC=clang-8 CXX=clang++-8                                                                        /opt/get_symengine.sh d0369286fb0143e16887c9876d45b2f06f89a294 /opt/symengine-d036928-tcm Release -DWITH_BFD=OFF -DWITH_TCMALLOC=ON
+
+RUN \
+    curl -Ls https://github.com/python/cpython/archive/v3.8.2.tar.gz | tar xz && \
+    cd cpython-3.8.2 && \
+    CC=gcc-8 CFLAGS="-O2 -march=native" ./configure --prefix=/opt/cpython-3.8 --enable-loadable-sqlite-extensions --enable-shared --with-ensurepip=yes LDFLAGS=-Wl,-rpath=/opt/cpython-3.8/lib && \
+    make -j 4 && \
+    LD_LIBRARY_PATH=. ./python -c "import sqlite3, uuid, lzma, bz2" && make install && \
+    cd .. && rm -r cpython-3.8.2 && /opt/cpython-3.8/bin/python3 -m pip install --upgrade --upgrade-strategy=eager pip && \
+    /opt/cpython-3.8/bin/python3 -m pip install setuptools wheel appdirs pybind11 numpy cython scipy matplotlib pycparser pytest-pep8 pytest-cov pytest-flakes pytest-flake8 pytest-xdist pytest-docstyle
+
 
 # RUN \
 #     PATH=/opt/julia-1.2.0/bin:$PATH python3 -m pip install diffeqpy numba && \
@@ -39,34 +66,6 @@ RUN \
 #     apt-get --quiet --assume-yes --no-install-recommends install inkscape ninja-build && \
 #     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-
-RUN \
-    cd /tmp && \
-    curl -LOs https://github.com/jgm/pandoc/releases/download/2.7.3/pandoc-2.7.3-1-amd64.deb && \
-    dpkg -i pandoc-2.7.3-1-amd64.deb && \
-    rm pandoc-2.7.3-1-amd64.deb
-
-COPY scripts/get_sundials.sh /opt/
-RUN \
-    CC=gcc-8 /opt/get_sundials.sh 5.1.0 /opt/sundials-5.1.0-klu-lapack -DLAPACK_ENABLE=ON -DKLU_ENABLE=ON -DKLU_INCLUDE_DIR=/usr/include/suitesparse -DKLU_LIBRARY_DIR=/usr/lib/x86_64-linux-gnu -DSUNDIALS_INDEX_SIZE=32 && \
-    CC=gcc-8 /opt/get_sundials.sh 5.1.0 /opt/sundials-5.1.0-noklu-nolapack-extended-int64 -DLAPACK_ENABLE=OFF -DKLU_ENABLE=OFF -DSUNDIALS_PRECISION:STRING="extended" -DSUNDIALS_INDEX_SIZE=64 && \
-    CC=gcc-8 /opt/get_sundials.sh 5.1.0 /opt/sundials-5.1.0-noklu-nolapack-single-int32 -DLAPACK_ENABLE=OFF -DKLU_ENABLE=OFF -DSUNDIALS_PRECISION:STRING="single" -DSUNDIALS_INDEX_SIZE=32 && \
-    CC=clang-8 CFLAGS="-fsanitize=memory -fno-omit-frame-pointer -fno-optimize-sibling-calls -O1" /opt/get_sundials.sh 5.1.0 /opt/sundials-5.1.0-msan -DLAPACK_ENABLE=OFF -DKLU_ENABLE=OFF -DSUNDIALS_INDEX_SIZE=32 && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
-RUN \
-    apt-get update && \
-    apt-get --quiet --assume-yes --no-install-recommends install libtool-bin uuid-dev libgdbm-dev tk-dev && \
-    apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
-RUN \
-    curl -Ls https://github.com/python/cpython/archive/v3.8.2rc2.tar.gz | tar xz && \
-    cd cpython-3.8.2rc2 && \
-    CC=gcc-8 CFLAGS="-O2 -march=native" ./configure --prefix=/opt/cpython-3.8 --enable-loadable-sqlite-extensions --enable-shared --with-ensurepip=yes LDFLAGS=-Wl,-rpath=/opt/cpython-3.8/lib && \
-    make -j 4 && \
-    LD_LIBRARY_PATH=. ./python -c "import sqlite3, uuid, lzma, bz2" && make install && \
-    cd .. && rm -r cpython-3.8.2rc2 && /opt/cpython-3.8/bin/python3 -m pip install --upgrade --upgrade-strategy=eager pip && \
-    /opt/cpython-3.8/bin/python3 -m pip install setuptools wheel appdirs pybind11 numpy cython scipy matplotlib pycparser pytest-pep8 pytest-cov pytest-flakes pytest-flake8 pytest-xdist pytest-docstyle
 
 # RUN \
 #     curl -Ls "https://julialang-s3.julialang.org/bin/linux/x64/1.2/julia-1.2.0-linux-x86_64.tar.gz" | tar xz -C /opt && \
